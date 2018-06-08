@@ -39,7 +39,7 @@ import Control.Applicative
 import Control.Comonad
 import Control.Monad.Trans.Class
 import Control.Monad (ap)
-import Data.Functor.Apply
+import Data.Functor.Semiapplicative
 import Data.Functor.Identity
 
 type Cont r = ContsT r Identity Identity
@@ -63,7 +63,7 @@ newtype ContsT r w m a = ContsT { runContsT :: w (a -> m r) -> m r }
 instance Functor w => Functor (ContsT r w m) where
   fmap f (ContsT k) = ContsT $ k . fmap (. f)
 
-instance Comonad w => Apply (ContsT r w m) where
+instance Comonad w => Semiapplicative (ContsT r w m) where
   (<.>) = ap
 
 instance Comonad w => Applicative (ContsT r w m) where

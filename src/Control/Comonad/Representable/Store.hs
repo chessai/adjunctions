@@ -40,7 +40,7 @@ import Control.Comonad.Store.Class
 import Control.Comonad.Traced.Class
 import Control.Comonad.Trans.Class
 import Control.Monad.Identity
-import Data.Functor.Apply
+import Data.Functor.Semiapplicative
 import Data.Functor.Extend
 import Data.Functor.Rep
 #if !(MIN_VERSION_base(4,11,0))
@@ -91,7 +91,7 @@ instance (Comonad w, Representable g, Rep g ~ s) => ComonadStore s (StoreT g w) 
 instance (Functor w, Functor g) => Functor (StoreT g w) where
   fmap f (StoreT w s) = StoreT (fmap (fmap f) w) s
 
-instance (Apply w, Semigroup (Rep g), Representable g) => Apply (StoreT g w) where
+instance (Semiapplicative w, Semigroup (Rep g), Representable g) => Semiapplicative (StoreT g w) where
   StoreT ff m <.> StoreT fa n = StoreT (apRep <$> ff <.> fa) (m <> n)
 
 instance (ComonadApply w, Semigroup (Rep g), Representable g) => ComonadApply (StoreT g w) where

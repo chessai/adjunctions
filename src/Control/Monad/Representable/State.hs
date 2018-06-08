@@ -38,8 +38,8 @@ module Control.Monad.Representable.State
 import Control.Applicative
 #endif
 import Control.Monad
-import Data.Functor.Bind
-import Data.Functor.Bind.Trans
+import Data.Functor.Semimonad
+import Data.Functor.Semimonad.Trans
 import Control.Monad.State.Class
 import Control.Monad.Cont.Class
 import Control.Monad.Reader.Class
@@ -136,14 +136,14 @@ execStateT m s = do
 instance (Functor g, Functor m) => Functor (StateT g m) where
   fmap f = StateT . fmap (fmap (\ ~(a, s) -> (f a, s))) . getStateT
 
-instance (Representable g, Bind m) => Apply (StateT g m) where
+instance (Representable g, Semimonad m) => Semiapplicative (StateT g m) where
   mf <.> ma = mf >>- \f -> fmap f ma
 
 instance (Representable g, Functor m, Monad m) => Applicative (StateT g m) where
   pure = StateT . leftAdjunctRep return
   mf <*> ma = mf >>= \f -> fmap f ma
 
-instance (Representable g, Bind m) => Bind (StateT g m) where
+instance (Representable g, Semimonad m) => Semimonad (StateT g m) where
   StateT m >>- f = StateT $ fmap (>>- rightAdjunctRep (runStateT . f)) m
 
 instance (Representable g, Monad m) => Monad (StateT g m) where
@@ -152,7 +152,7 @@ instance (Representable g, Monad m) => Monad (StateT g m) where
 #endif
   StateT m >>= f = StateT $ fmap (>>= rightAdjunctRep (runStateT . f)) m
 
-instance Representable f => BindTrans (StateT f) where
+instance Representable f => SemimonadTrans (StateT f) where
   liftB m = stateT $ \s -> fmap (\a -> (a, s)) m
 
 instance Representable f => MonadTrans (StateT f) where

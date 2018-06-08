@@ -37,7 +37,7 @@ import Data.Distributive
 #if __GLASGOW_HASKELL__ < 710
 import Data.Foldable
 #endif
-import Data.Functor.Bind
+import Data.Functor.Semimonad
 import Data.Functor.Extend
 import Data.Functor.Identity
 import Data.Functor.Rep
@@ -47,8 +47,8 @@ import Data.Traversable
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Semigroup
 #endif
-import Data.Semigroup.Foldable
-import Data.Semigroup.Traversable
+import Data.Semigroup.Semifoldable
+import Data.Semigroup.Semitraversable
 import GHC.Generics hiding (Rep)
 
 type Reader f = ReaderT f Identity
@@ -73,16 +73,16 @@ instance (Representable f, Representable m) => Representable (ReaderT f m) where
   type Rep (ReaderT f m) = (Rep f, Rep m)
   tabulate = ReaderT . tabulate . fmap tabulate . curry
   index = uncurry . fmap index . index . getReaderT
-  cotraverse1 = cotraverse1Iso (Comp1 . getReaderT) (ReaderT . unComp1)
+  cosemitraverse = cosemitraverseIso (Comp1 . getReaderT) (ReaderT . unComp1)
 
-instance (Representable f, Apply m) => Apply (ReaderT f m) where
+instance (Representable f, Semiapplicative m) => Semiapplicative (ReaderT f m) where
   ReaderT ff <.> ReaderT fa = ReaderT (unCo ((<.>) <$> Co ff <.> Co fa))
 
 instance (Representable f, Applicative m) => Applicative (ReaderT f m) where
   pure = ReaderT . pureRep . pure
   ReaderT ff <*> ReaderT fa = ReaderT (unCo ((<*>) <$> Co ff <*> Co fa))
 
-instance (Representable f, Bind m) => Bind (ReaderT f m) where
+instance (Representable f, Semimonad m) => Semimonad (ReaderT f m) where
   ReaderT fm >>- f = ReaderT $ mzipWithRep (>>-) fm $ distribute (getReaderT . f)
 
 instance (Representable f, Monad m) => Monad (ReaderT f m) where
@@ -130,11 +130,11 @@ instance (Representable f, MonadWriter w m) => MonadWriter w (ReaderT f m) where
 instance (Foldable f, Foldable m) => Foldable (ReaderT f m) where
   foldMap f = foldMap (foldMap f) . getReaderT
 
-instance (Foldable1 f, Foldable1 m) => Foldable1 (ReaderT f m) where
-  foldMap1 f = foldMap1 (foldMap1 f) . getReaderT
+instance (Semifoldable f, Semifoldable m) => Semifoldable (ReaderT f m) where
+  semifoldMap f = semifoldMap (semifoldMap f) . getReaderT
 
 instance (Traversable f, Traversable m) => Traversable (ReaderT f m) where
   traverse f = fmap ReaderT . traverse (traverse f) . getReaderT
 
-instance (Traversable1 f, Traversable1 m) => Traversable1 (ReaderT f m) where
-  traverse1 f = fmap ReaderT . traverse1 (traverse1 f) . getReaderT
+instance (Semitraversable f, Semitraversable m) => Semitraversable (ReaderT f m) where
+  semitraverse f = fmap ReaderT . semitraverse (semitraverse f) . getReaderT
